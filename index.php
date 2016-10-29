@@ -3,7 +3,6 @@
 	ini_set("user_agent", "hitecherik");
 
 	function predictNextDate($xml) {
-    	// $xml = simplexml_load_file($url);
     	$times = [];
     	$sum_differences = 0;
     	
@@ -18,7 +17,6 @@
     	
     	$average = round($sum_differences / (count($times)-1));
     	$prediction = strtotime($xml->channel->item[0]->pubDate . " + $average days");
-    	// return date("l jS F Y", $prediction);
 		return $prediction;
 	}
 	
@@ -42,7 +40,7 @@
 		return $matches["url"];
 	}
 
-	function formatPodcast($url, $mobile) {
+	function podcastObject($url) {
 		$file = file_get_contents($url);
 		$xml = simplexml_load_string($file);
 		$prediction = predictNextDate($xml);
@@ -50,23 +48,29 @@
 		$absolute_date = date("l jS F", $prediction); 
 		$relative_date = getRelativeDate($prediction);
 		$artwork = getPodcastArtwork($file);
-		
-		if (!$mobile) {
-			return "<tr><td><img src='$artwork' alt='$title' width='100px'></td><td>$title</td><td>$relative_date</td><td>$absolute_date</td></tr>";
-		}
 
-		return "<tr><td><img src='$artwork' alt='$title' width='100px'></td><td>$relative_date</td></tr>";
+		return array(
+			"formats"=>["<tr><td><img src='$artwork' alt='$title' width='100px'></td><td>$title</td><td>$relative_date</td><td>$absolute_date</td></tr>", "<tr><td><img src='$artwork' alt='$title' width='100px'></td><td>$relative_date</td></tr>"],
+			"prediction"=>$prediction
+		);
 	}
 
-	/* echo predictNextDate("https://www.relay.fm/cortex/feed");
-	echo "<br>";
-	echo predictNextDate("http://www.hellointernet.fm/podcast?format=rss");
-	echo "<br>";
-	echo predictNextDate("http://www.relay.fm/ungeniused/feed");
-	echo "<br>";
-	echo predictNextDate("http://feeds.megaphone.fm/PSM7954412883"); */
+	function compareTimes($a, $b) {
+		if ($a["prediction"] == $b["prediction"]) {
+			return 0;
+		}
 
-	$podcasts = ["https://www.relay.fm/cortex/feed", "http://www.hellointernet.fm/podcast?format=rss", "https://www.relay.fm/ungeniused/feed", "http://www.bbc.co.uk/programmes/p02pc9pj/episodes/downloads.rss", "http://feeds.megaphone.fm/PSM7954412883", "https://www.relay.fm/bonanza/feed", "https://www.relay.fm/liftoff/feed"];
+		return ($a["prediction"] < $b["prediction"]) ? -1 : 1;
+	}
+
+	$podcastURLs = ["https://www.relay.fm/cortex/feed", "http://www.hellointernet.fm/podcast?format=rss", "https://www.relay.fm/ungeniused/feed", "http://www.bbc.co.uk/programmes/p02pc9pj/episodes/downloads.rss", "http://feeds.megaphone.fm/PSM7954412883", "https://www.relay.fm/bonanza/feed", "https://www.relay.fm/liftoff/feed"];
+	$podcasts = [];
+
+	foreach ($podcastURLs as $podcastURL) {
+		array_push($podcasts, podcastObject($podcastURL));
+	}
+
+	usort($podcasts, "compareTimes");
 ?>
 <!doctype html>
 <html>
@@ -99,6 +103,7 @@
 			
 			.copyright {
 				font-size: 0.8em !important;
+				line-height: 1.5em;
 			}
 
 			@media (max-width: 649px) {
@@ -124,7 +129,7 @@
 			<tbody>
 				<?php
 					foreach ($podcasts as $podcast) {
-						echo formatPodcast($podcast, false);
+						echo $podcast["formats"][0];
 					}
 				?>
 
@@ -142,7 +147,7 @@
 			<tbody>
 				<?php 
 					foreach ($podcasts as $podcast) {
-						echo formatPodcast($podcast, true);
+						echo $podcast["formats"][1];
 					}
 				?>
 				
