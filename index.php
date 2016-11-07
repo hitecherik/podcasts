@@ -11,23 +11,27 @@
     	}
 
 		for ($i = 0; $i < (count($times)-1); $i++) {
-        	$difference = floor(($times[$i] - $times[$i+1]) / (60 * 60 * 24));
-			$sum_differences += $difference;
+        	// $difference = floor(($times[$i] - $times[$i+1]) / (60 * 60 * 24));
+			// $sum_differences += $difference;
+			$sum_differences += $times[$i] - $times[$i+1];
     	}
     	
     	$average = round($sum_differences / (count($times)-1));
-    	$prediction = strtotime($xml->channel->item[0]->pubDate . " + $average days");
+		$average_in_days = round($average / (60*60*24));
+    	$prediction = strtotime($xml->channel->item[0]->pubDate . " + $average_in_days days");
 		return $prediction;
 	}
 	
 	function getRelativeDate($prediction) {
 		$now = (int) date("U", time());
-		$difference = floor(($prediction - $now) / (3600 * 24));
+		$difference = round(($prediction - $now) / (3600 * 24));
+		$time_measure = (abs($difference) == 1? "day" : "days");
 
 		if ($difference > 0) {
-			return "in $difference days";
+			return "in $difference $time_measure";
 		} elseif ($difference < 0) {
-			return "$difference days ago";
+			$difference  *= -1;
+			return "$difference $time_measure ago";
 		}
 
 		return "today";
