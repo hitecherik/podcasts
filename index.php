@@ -67,7 +67,7 @@
 		return ($a["prediction"] < $b["prediction"]) ? -1 : 1;
 	}
 
-	$podcastURLs = ["https://www.relay.fm/cortex/feed", "http://www.hellointernet.fm/podcast?format=rss", "https://www.relay.fm/ungeniused/feed", "http://www.bbc.co.uk/programmes/p02pc9pj/episodes/downloads.rss", /*"http://feeds.megaphone.fm/PSM7954412883",*/ "https://www.relay.fm/mixedfeelings/feed", "https://www.relay.fm/bonanza/feed", "https://www.relay.fm/liftoff/feed"];
+	$podcastURLs = ["https://www.relay.fm/cortex/feed", "http://www.hellointernet.fm/podcast?format=rss", "https://www.relay.fm/ungeniused/feed", "http://www.bbc.co.uk/programmes/p02pc9pj/episodes/downloads.rss", /*"http://feeds.megaphone.fm/PSM7954412883",*/ "https://www.relay.fm/mixedfeelings/feed", "https://www.relay.fm/bonanza/feed", "https://www.relay.fm/liftoff/feed", "http://twobitgeeks.libsyn.com/rss"];
 	$podcasts = [];
 
 	foreach ($podcastURLs as $podcastURL) {
