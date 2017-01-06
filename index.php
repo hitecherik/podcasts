@@ -54,7 +54,7 @@
 		$artwork = getPodcastArtwork($file);
 
 		return array(
-			"formats"=>["<tr><td><img src='$artwork' alt='$title' width='100px'></td><td>$title</td><td>$relative_date</td><td>$absolute_date</td></tr>", "<tr><td><img src='$artwork' alt='$title' width='100px'></td><td>$relative_date</td></tr>"],
+			"formats"=>["<tr><td><img src=\"$artwork\" alt=\"$title\" width=\"100px\"></td><td>$title</td><td>$relative_date</td><td>$absolute_date</td></tr>", "<tr><td><img src=\"$artwork\" alt=\"$title\" width=\"100px\"></td><td>$relative_date</td></tr>"],
 			"prediction"=>$prediction
 		);
 	}
@@ -66,15 +66,30 @@
 
 		return ($a["prediction"] < $b["prediction"]) ? -1 : 1;
 	}
-
-	$podcastURLs = ["https://www.relay.fm/cortex/feed", "http://www.hellointernet.fm/podcast?format=rss", "https://www.relay.fm/ungeniused/feed", "http://www.bbc.co.uk/programmes/p02pc9pj/episodes/downloads.rss", /*"http://feeds.megaphone.fm/PSM7954412883",*/ "https://www.relay.fm/mixedfeelings/feed", "https://www.relay.fm/bonanza/feed", "https://www.relay.fm/liftoff/feed", "http://twobitgeeks.libsyn.com/rss"];
+	
+	$db = new SQLite3("log.db");
+	$date = date("Y-m-d");
 	$podcasts = [];
+	$podcastsJSON = $db->querySingle("SELECT podcasts FROM log WHERE date='{$date}'");
+	$from_db = "no";  // debug
+	
+	if ($podcastsJSON && !isset($_GET["force_update"])) {
+		$podcasts = json_decode($podcastsJSON, true);
+		$from_db = "yes";
+	} else {
+		$podcastURLs = ["https://www.relay.fm/cortex/feed", "http://www.hellointernet.fm/podcast?format=rss", "https://www.relay.fm/ungeniused/feed", "http://www.bbc.co.uk/programmes/p02pc9pj/episodes/downloads.rss", /*"http://feeds.megaphone.fm/PSM7954412883",*/ "https://www.relay.fm/mixedfeelings/feed", "https://www.relay.fm/bonanza/feed", "https://www.relay.fm/liftoff/feed", "http://twobitgeeks.libsyn.com/rss"];
 
-	foreach ($podcastURLs as $podcastURL) {
-		array_push($podcasts, podcastObject($podcastURL));
+		foreach ($podcastURLs as $podcastURL) {
+			array_push($podcasts, podcastObject($podcastURL));
+		}
+
+		usort($podcasts, "compareTimes");
+		
+		//$podcastsJSON = str_replace("'", "\\'", json_encode($podcasts));
+		//echo $podcastsJSON;
+		$podcastsJSON = json_encode($podcasts);
+		$db->exec("DELETE FROM log; INSERT INTO log VALUES ('{$date}', '{$podcastsJSON}')");
 	}
-
-	usort($podcasts, "compareTimes");
 ?>
 <!doctype html>
 <html>
@@ -121,6 +136,10 @@
 				}
 			}
 		</style>
+		
+		<script>
+			console.log("From script: <?php echo $from_db; ?>.");
+		</script>
 	</head>
 	<body>
 		<table class="pure-table pure-table-horizontal wide-screen">
